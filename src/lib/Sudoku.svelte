@@ -9,7 +9,6 @@
   import seven from "../components/seven.svelte";
   import eight from "../components/eight.svelte";
   import nine from "../components/nine.svelte";
-  import { clear_loops } from "svelte/internal";
 
   const numSvgs = {
     1: one,
@@ -42,7 +41,7 @@
     [0, 0, 5, 2, 0, 6, 3, 0, 0],
   ];
 
-  const rows = numbers.map((row) => {
+  let rows = numbers.map((row) => {
     return row.map((col) => {
       const column = {
         value: col,
@@ -54,7 +53,14 @@
 
   const keyboardHandler = (e: KeyboardEvent) => {
     const name = e.key;
-    if (numKeys.includes(parseInt(name))) console.log(name);
+    if (numKeys.includes(parseInt(name)) && selectedCell[0] !== -1) {
+      const isFixed = rows[selectedCell[0]][selectedCell[1]].isFixed;
+      if (!isFixed) {
+        rows[selectedCell[0]][selectedCell[1]].value = parseInt(name);
+      }
+    } else if (name === "Escape") {
+      selectedCell = [-1, -1];
+    }
   };
 
   addEventListener("keydown", keyboardHandler);
@@ -64,14 +70,29 @@
   });
 
   let selectedCell = [-1, -1];
+  let selectedBox = {
+    rows: [],
+    columns: [],
+  };
 
   const handleClick = (rowIndex: number, colIndex: number) => {
     selectedCell = [rowIndex, colIndex];
+    const boxRowId = Math.floor(rowIndex / 3) * 3;
+    const boxColumnId = Math.floor(colIndex / 3) * 3;
+    selectedBox.rows = [];
+    selectedBox.columns = [];
+    console.log(boxRowId, boxColumnId)
+    for (let i = 0; i < 3; i++) {
+      selectedBox.rows.push(boxRowId + i);
+      selectedBox.columns.push(boxColumnId + i);
+    }
   };
 </script>
 
-<div class="h-[200px]" />
-<div class="flex flex-col max-w-[400px] mx-auto align-middle justify-center ">
+<div class="h-[100px]" />
+<div
+  class="flex flex-col max-w-[400px] mx-auto align-middle justify-center border-2 border-black select-none"
+>
   {#each rows as row, rowIndex}
     <div
       class={`grid grid-cols-9 text-center ${
@@ -85,7 +106,7 @@
       {#each row as cell, colIndex}
         <div
           on:click={() => handleClick(rowIndex, colIndex)}
-          class={`w-full p-2 h-full text-black font-semibold text-xl ${
+          class={`w-full p-1 h-full text-black font-semibold text-3xl ${
             colIndex === 2 || colIndex === 5
               ? "border-r-2 border-r-black"
               : colIndex !== 8
@@ -93,16 +114,23 @@
               : ""
           } ${
             cell.isFixed
-              ? "text-black cursor-default"
-              : "text-blue-400 cursor-pointer"
+              ? "text-black cursor-default bg-neutral-200"
+              : "text-blue-400 cursor-pointer bg-white"
           } ${
             selectedCell.join("") === [rowIndex, colIndex].join("")
-              ? "bg-blue-200"
+              ? "bg-blue-200 with-stroke text-blue-500"
               : selectedCell[0] !== -1 &&
                 rows[selectedCell[0]][selectedCell[1]]?.value === cell.value
-              ? "text-red-300"
+              ? "with-stroke text-blue-500"
               : ""
-          } `}
+          } ${
+            selectedCell[0] === rowIndex ||
+            selectedCell[1] === colIndex ||
+            (selectedBox.rows.includes(rowIndex) &&
+              selectedBox.columns.includes(colIndex))
+              ? "bg-blue-800/10"
+              : ""
+          }`}
         >
           <!-- <svelte:component this={numSvgs[cell.value]} /> -->
           {cell.value !== 0 ? cell.value : ""}
@@ -111,3 +139,9 @@
     </div>
   {/each}
 </div>
+
+<style>
+  .with-stroke {
+    -webkit-text-stroke: 0.05em black;
+  }
+</style>
