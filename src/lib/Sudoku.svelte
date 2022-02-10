@@ -326,7 +326,7 @@
     <div
       class={`grid grid-cols-9 text-center ${
         rowIndex === 5 || rowIndex === 2
-          ? "border-b-2 border-b-black"
+          ? "border-b-4 border-b-black"
           : rowIndex !== 8
           ? "border-b border-b-black"
           : ""
@@ -337,7 +337,7 @@
           on:click={() => handleClick(rowIndex, colIndex)}
           class={`w-full p-1 h-full text-black font-bold text-3xl ${
             colIndex === 2 || colIndex === 5
-              ? "border-r-2 border-r-black"
+              ? "border-r-4 border-r-black"
               : colIndex !== 8
               ? "border-r border-r-black"
               : ""
@@ -348,7 +348,7 @@
           } ${
             selectedCell.join("") === [rowIndex, colIndex].join("")
               ? !cell.notes.length
-                ? "with-stroke text-cyan-500 bg-blue-400/90"
+                ? "with-stroke text-cyan-500 bg-gray-900"
                 : "bg-gray-900"
               : selectedCell[0] !== -1 &&
                 rows[selectedCell[0]][selectedCell[1]]?.value === cell.value &&
@@ -362,10 +362,20 @@
               (selectedBox.rows.includes(rowIndex) &&
                 selectedBox.columns.includes(colIndex)))
               ? cell.isFixed
-                ? "bg-yellow-200"
+                ? "bg-blue-200"
+                : selectedCell[0] !== -1 &&
+                  cell.notes.includes(
+                    rows[selectedCell[0]][selectedCell[1]]?.value
+                  )
+                ? "bg-yellow-100"
                 : "bg-blue-100"
               : ""
-          } ${cell.notes.length ? "flex items-center justify-center" : ""}`}
+          } ${cell.notes.length ? "flex items-center justify-center" : ""} ${
+            selectedCell[0] !== -1 &&
+            cell.notes.includes(rows[selectedCell[0]][selectedCell[1]]?.value)
+              ? "bg-yellow-100"
+              : ""
+          }`}
         >
           <!-- <svelte:component this={numSvgs[cell.value]} /> -->
           {#if cell.value}
@@ -376,7 +386,7 @@
                 class={`text-xs  absolute flex items-center justify-center note-position ${
                   selectedCell[0] !== -1 &&
                   rows[selectedCell[0]][selectedCell[1]]?.value === note
-                    ? "text-yellow-500"
+                    ? "text-yellow-600"
                     : "text-gray-400"
                 }`}
                 style={notePositionHandler(note)}>{note}</span
@@ -391,8 +401,10 @@
 
 <div dir="rtl" class="max-w-[400px] mx-auto grid grid-cols-9 text-center mt-2">
   <div
-    class={`bg-gray-800 text-white border-2 border-white rounded-lg py-2  text-xl cursor-pointer flex justify-center ${
-      isNoteEnabled ? "bg-yellow-200 text-gray-800 border-gray-800" : ""
+    class={` border-2 rounded-lg py-2  text-xl cursor-pointer flex justify-center ${
+      isNoteEnabled
+        ? "bg-yellow-200 text-gray-800 border-gray-800"
+        : "bg-gray-800 text-white  border-white"
     }`}
     on:click={noteToggleHandler}
   >
@@ -420,7 +432,7 @@
 >
   {#each numKeys as num, numIndex ("num" + numIndex)}
     <div
-      class={`bg-gray-800 text-white border-2 border-white rounded-lg py-2 px-1 text-2xl font-bold cursor-pointer select-none ${
+      class={` border-2 rounded-lg py-2 px-1 text-2xl font-bold cursor-pointer select-none ${
         isNoteEnabled
           ? selectedCell[0] !== -1 &&
             rows[selectedCell[0]][selectedCell[1]]?.notes.includes(num)
@@ -429,7 +441,7 @@
           : selectedCell[0] !== -1 &&
             rows[selectedCell[0]][selectedCell[1]].value === num
           ? "bg-gray-100 text-gray-800 border-gray-800"
-          : ""
+          : "bg-gray-800 text-white  border-white"
       } ${
         selectedCell[0] !== -1 && rows[selectedCell[0]][selectedCell[1]].isFixed
           ? "opacity-50 cursor-not-allowed"
