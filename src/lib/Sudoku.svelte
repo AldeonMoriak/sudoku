@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
-import { debug } from "svelte/internal";
 
   let lang: "fa" | "en" = "en";
   let selectedCell = [-1, -1];
@@ -10,6 +9,12 @@ import { debug } from "svelte/internal";
   };
   let isNoteEnabled = false;
   let isTimerShown = true;
+
+  type Cell = {
+    isFixed: boolean;
+    value: number;
+    notes: number[];
+  };
 
   const numKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const farsiNumKeys = ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -60,9 +65,9 @@ import { debug } from "svelte/internal";
 
   const selectedPuzzle = puzzles.easy[0];
   const getPuzzleReady = (p: number[]) => {
-    const puzzle: number[][] = [[],[],[],[],[],[],[],[],[]];
+    const puzzle: number[][] = [[], [], [], [], [], [], [], [], []];
     p.forEach((num, index) => {
-      puzzle.push
+      puzzle.push;
       const idx = Math.floor(index / 9);
       puzzle[idx].push(num);
     });
@@ -73,7 +78,7 @@ import { debug } from "svelte/internal";
 
   let rows = numbers.map((row) => {
     return row.map((col) => {
-      const column = {
+      const column: Cell = {
         value: col,
         isFixed: col !== 0 ? true : false,
         notes: [] as number[],
@@ -150,6 +155,7 @@ import { debug } from "svelte/internal";
   };
 
   const keyboardHandler = (e: KeyboardEvent) => {
+    e.preventDefault();
     const name = e.key;
     if (selectedCell[0] !== -1) {
       if (isOfTypeMove(name)) {
@@ -179,6 +185,8 @@ import { debug } from "svelte/internal";
       ) {
         rows[selectedCell[0]][selectedCell[1]].value = 0;
         rows[selectedCell[0]][selectedCell[1]].notes = [];
+      } else if (name === "n") {
+        isNoteEnabled = !isNoteEnabled;
       }
     }
   };
@@ -327,7 +335,7 @@ import { debug } from "svelte/internal";
       {#each row as cell, colIndex}
         <div
           on:click={() => handleClick(rowIndex, colIndex)}
-          class={`w-full p-1 h-full text-black font-bold text-3xl  ${
+          class={`w-full p-1 h-full text-black font-bold text-3xl ${
             colIndex === 2 || colIndex === 5
               ? "border-r-2 border-r-black"
               : colIndex !== 8
@@ -335,8 +343,8 @@ import { debug } from "svelte/internal";
               : ""
           } ${
             cell.isFixed
-              ? "text-black cursor-default bg-neutral-200"
-              : "text-blue-400 cursor-pointer bg-white"
+              ? "text-black cursor-default bg-gray-300"
+              : "text-black cursor-pointer bg-white"
           } ${
             selectedCell.join("") === [rowIndex, colIndex].join("")
               ? !cell.notes.length
@@ -348,13 +356,14 @@ import { debug } from "svelte/internal";
               ? "with-stroke text-cyan-500"
               : ""
           } ${
-            selectedCell[0] === rowIndex ||
-            selectedCell[1] === colIndex ||
-            (selectedBox.rows.includes(rowIndex) &&
-              selectedBox.columns.includes(colIndex))
+            selectedCell.join("") !== [rowIndex, colIndex].join("") &&
+            (selectedCell[0] === rowIndex ||
+              selectedCell[1] === colIndex ||
+              (selectedBox.rows.includes(rowIndex) &&
+                selectedBox.columns.includes(colIndex)))
               ? cell.isFixed
-                ? "bg-blue-200"
-                : "bg-blue-100/50"
+                ? "bg-yellow-200"
+                : "bg-blue-100"
               : ""
           } ${cell.notes.length ? "flex items-center justify-center" : ""}`}
         >
@@ -380,7 +389,7 @@ import { debug } from "svelte/internal";
   {/each}
 </div>
 
-<div dir="rtl" class="max-w-[400px] mx-auto grid grid-cols-9 text-center mt-4">
+<div dir="rtl" class="max-w-[400px] mx-auto grid grid-cols-9 text-center mt-2">
   <div
     class={`bg-gray-800 text-white border-2 border-white rounded-lg py-2  text-xl cursor-pointer flex justify-center ${
       isNoteEnabled ? "bg-yellow-200 text-gray-800 border-gray-800" : ""
@@ -405,11 +414,11 @@ import { debug } from "svelte/internal";
 </div>
 
 <div
-  class={`max-w-[400px] mx-auto grid grid-cols-9 text-center mt-4  ${
+  class={`max-w-[400px] mx-auto grid grid-cols-9 text-center mt-2  ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}
 >
-  {#each numKeys as num}
+  {#each numKeys as num, numIndex ("num" + numIndex)}
     <div
       class={`bg-gray-800 text-white border-2 border-white rounded-lg py-2 px-1 text-2xl font-bold cursor-pointer select-none ${
         isNoteEnabled
@@ -417,6 +426,13 @@ import { debug } from "svelte/internal";
             rows[selectedCell[0]][selectedCell[1]]?.notes.includes(num)
             ? "bg-yellow-200 text-gray-800 border-gray-800"
             : "bg-gray-200  text-gray-800 border-gray-800"
+          : selectedCell[0] !== -1 &&
+            rows[selectedCell[0]][selectedCell[1]].value === num
+          ? "bg-gray-100 text-gray-800 border-gray-800"
+          : ""
+      } ${
+        selectedCell[0] !== -1 && rows[selectedCell[0]][selectedCell[1]].isFixed
+          ? "opacity-50 cursor-not-allowed"
           : ""
       }`}
       on:click={() => fillCellHandler(num)}
