@@ -3,7 +3,8 @@ module.exports = {
   theme: {
     extend: {},
     fontFamily: {
-      'vazir': 'Vazir'
+      'vazir': ['Vazir', 'Poppins'],
+      'poppins': ['Poppins', 'Vazir']
     }
   },
   plugins: [],

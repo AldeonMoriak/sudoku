@@ -1,28 +1,75 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
+import { debug } from "svelte/internal";
 
-  let lang: "fa" | "en" = "fa";
+  let lang: "fa" | "en" = "en";
   let selectedCell = [-1, -1];
   let selectedBox = {
     rows: [],
     columns: [],
   };
   let isNoteEnabled = false;
+  let isTimerShown = true;
 
   const numKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const farsiNumKeys = ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 
-  const numbers = [
-    [3, 0, 6, 5, 0, 8, 4, 0, 0],
-    [5, 2, 0, 0, 0, 0, 0, 0, 0],
-    [0, 8, 7, 0, 0, 0, 0, 3, 1],
-    [0, 0, 3, 0, 1, 0, 0, 8, 0],
-    [9, 0, 0, 8, 6, 3, 0, 0, 5],
-    [0, 5, 0, 0, 9, 0, 6, 0, 0],
-    [1, 3, 0, 0, 0, 0, 2, 5, 0],
-    [0, 0, 0, 0, 0, 0, 0, 7, 4],
-    [0, 0, 5, 2, 0, 6, 3, 0, 0],
-  ];
+  let leftTime = ["00", "00", "00"];
+  const startDate = Date.now();
+
+  const timerHandler = () => {
+    const seconds = Date.now() - startDate;
+    leftTime = toStringTime(seconds);
+  };
+
+  const timer = setInterval(timerHandler, 500);
+
+  const toStringTime = (time: number) => {
+    const seconds = time / 1000;
+    return [
+      Math.floor(seconds / 3600).toLocaleString(undefined, {
+        minimumIntegerDigits: 2,
+      }),
+      Math.floor((seconds % 3600) / 60).toLocaleString(undefined, {
+        minimumIntegerDigits: 2,
+      }),
+      (Math.floor(seconds % 3600) % 60).toLocaleString(undefined, {
+        minimumIntegerDigits: 2,
+      }),
+    ];
+  };
+
+  const puzzles = {
+    easy: [
+      [
+        0, 2, 4, 0, 0, 0, 0, 9, 3, 0, 1, 0, 3, 0, 2, 0, 6, 0, 3, 8, 6, 1, 9, 0,
+        5, 2, 4, 0, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 2, 0, 3, 1,
+        0, 0, 5, 7, 0, 0, 1, 0, 0, 9, 2, 0, 4, 3, 0, 0, 0, 3, 0, 5, 0, 2, 0, 6,
+        0, 5, 0, 0, 7, 0, 0, 8, 1,
+      ],
+    ],
+    hard: [
+      [
+        3, 0, 6, 5, 0, 8, 4, 0, 0, 5, 2, 0, 0, 0, 0, 0, 0, 0, 0, 8, 7, 0, 0, 0,
+        0, 3, 1, 0, 0, 3, 0, 1, 0, 0, 8, 0, 9, 0, 0, 8, 6, 3, 0, 0, 5, 0, 5, 0,
+        0, 9, 0, 6, 0, 0, 1, 3, 0, 0, 0, 0, 2, 5, 0, 0, 0, 0, 0, 0, 0, 0, 7, 4,
+        0, 0, 5, 2, 0, 6, 3, 0, 0,
+      ],
+    ],
+  };
+
+  const selectedPuzzle = puzzles.easy[0];
+  const getPuzzleReady = (p: number[]) => {
+    const puzzle: number[][] = [[],[],[],[],[],[],[],[],[]];
+    p.forEach((num, index) => {
+      puzzle.push
+      const idx = Math.floor(index / 9);
+      puzzle[idx].push(num);
+    });
+    return puzzle;
+  };
+
+  let numbers = getPuzzleReady(selectedPuzzle);
 
   let rows = numbers.map((row) => {
     return row.map((col) => {
@@ -66,6 +113,14 @@
     if (selectedCell[1] === -1) {
       selectedCell = [selectedCell[0], 8];
     }
+  };
+
+  const languageHandler = () => {
+    lang = lang === "fa" ? "en" : "fa";
+  };
+
+  const timerToggleHandler = () => {
+    isTimerShown = !isTimerShown;
   };
 
   const noteToggleHandler = () => {
@@ -119,9 +174,11 @@
           name === "BackSpace" ||
           name === "0" ||
           name === "۰") &&
-        !isFixed
+        !isFixed &&
+        !isNoteEnabled
       ) {
         rows[selectedCell[0]][selectedCell[1]].value = 0;
+        rows[selectedCell[0]][selectedCell[1]].notes = [];
       }
     }
   };
@@ -130,6 +187,7 @@
 
   onDestroy(() => {
     removeEventListener("keydown", keyboardHandler);
+    clearInterval(timer);
   });
 
   const handleClick = (rowIndex: number, colIndex: number) => {
@@ -174,10 +232,86 @@
   };
 </script>
 
-<div class="h-[100px]" />
+<div class="h-[10px]" />
+<div
+  class={`flex max-w-[400px] mx-auto align-middle justify-between select-none ${
+    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
+  }`}
+>
+  <div class="flex items-center justify-between w-full ">
+    <div class="flex">
+      <label for="language">
+        <p class="mx-3 text-gray-700 font-medium  cursor-pointer">en</p>
+      </label>
+      <label for="language" class="flex items-center cursor-pointer">
+        <!-- toggle -->
+        <div class="relative">
+          <!-- input -->
+          <input
+            id="language"
+            type="checkbox"
+            on:click={languageHandler}
+            checked={lang === "fa"}
+            class="sr-only peer"
+          />
+          <!-- line -->
+          <div
+            class="w-10 h-4 bg-gray-400 peer-checked:bg-blue-500 transition-colors delay-200 rounded-full shadow-inner"
+          />
+          <!-- dot -->
+          <div
+            class="peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
+          />
+        </div>
+        <!-- label -->
+        <div class="mx-3 text-gray-700 font-medium">fa</div>
+      </label>
+    </div>
+  </div>
+  <label for="timer" class="flex items-center cursor-pointer">
+    <!-- toggle -->
+    <div class="relative">
+      <!-- input -->
+      <input
+        id="timer"
+        type="checkbox"
+        checked={isTimerShown}
+        on:click={timerToggleHandler}
+        class="sr-only peer"
+      />
+      <!-- line -->
+      <div
+        class="w-10 h-4 bg-gray-400 peer-checked:bg-blue-500 transition-colors delay-200 rounded-full shadow-inner"
+      />
+      <!-- dot -->
+      <div
+        class="peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
+      />
+    </div>
+    <!-- label -->
+    <div class="mx-3 text-gray-700 font-medium">
+      {lang === "fa" ? "تایمر" : "Timer"}
+    </div>
+  </label>
+</div>
+<div class="h-[10px]" />
+<div
+  class={`mx-auto w-full flex justify-center ${
+    isTimerShown ? "opacity-100" : "opacity-0"
+  }`}
+>
+  <div
+    class={`px-3 w-20 text-gray-500 text-2xl font-bold ${
+      lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
+    }`}
+  >
+    {leftTime[0] === "00" ? leftTime.slice(1).join(":") : leftTime.join(":")}
+  </div>
+</div>
+<div class="h-[50px]" />
 <div
   class={`flex flex-col max-w-[400px] mx-auto align-middle justify-center border-2 border-black select-none ${
-    lang === "fa" ? "font-vazir sample_farsi_digits" : ""
+    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}
 >
   {#each rows as row, rowIndex}
@@ -193,7 +327,7 @@
       {#each row as cell, colIndex}
         <div
           on:click={() => handleClick(rowIndex, colIndex)}
-          class={`w-full p-1 h-full text-black font-semibold text-3xl  ${
+          class={`w-full p-1 h-full text-black font-bold text-3xl  ${
             colIndex === 2 || colIndex === 5
               ? "border-r-2 border-r-black"
               : colIndex !== 8
@@ -272,7 +406,7 @@
 
 <div
   class={`max-w-[400px] mx-auto grid grid-cols-9 text-center mt-4  ${
-    lang === "fa" ? "font-vazir sample_farsi_digits" : ""
+    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}
 >
   {#each numKeys as num}
