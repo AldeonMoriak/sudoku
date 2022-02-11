@@ -2,13 +2,21 @@
   import { onDestroy } from "svelte";
 
   let lang: "fa" | "en" = "en";
-  let selectedCell = [-1, -1];
+  let selectedCell: [number, number] = [-1, -1];
   let selectedBox = {
     rows: [],
     columns: [],
   };
   let isNoteEnabled = false;
   let isTimerShown = true;
+
+  type Action = {
+    value: number | number[];
+    isNote: boolean;
+    command?: "add" | "remove";
+    position: [number, number];
+  };
+  let actions: Action[] = [];
 
   type Cell = {
     isFixed: boolean;
@@ -138,16 +146,62 @@
 
   const fillCellHandler = (num: number) => {
     if (selectedCell[0] !== -1) {
+      const cell = rows[selectedCell[0]][selectedCell[1]];
       if (isNoteEnabled) {
-        rows[selectedCell[0]][selectedCell[1]].value = 0;
-        const notes = rows[selectedCell[0]][selectedCell[1]].notes;
-        if (notes.includes(num)) {
-          const index = notes.findIndex((note) => note === num);
+        if (cell.notes.includes(num)) {
+          actions = [
+            ...actions,
+            {
+              isNote: true,
+              position: [...selectedCell],
+              value: [...cell.notes],
+            },
+          ];
+          const index = cell.notes.findIndex((note) => note === num);
           rows[selectedCell[0]][selectedCell[1]].notes.splice(index, 1);
         } else {
+          if (cell.notes.length) {
+            actions = [
+              ...actions,
+              {
+                isNote: true,
+                position: [...selectedCell],
+                value: [...cell.notes],
+              },
+            ];
+          } else {
+            actions = [
+              ...actions,
+              {
+                isNote: false,
+                position: [...selectedCell],
+                value: cell.value,
+              },
+            ];
+          }
           rows[selectedCell[0]][selectedCell[1]].notes.push(num);
         }
+        rows[selectedCell[0]][selectedCell[1]].value = 0;
       } else {
+        if (cell.notes.length) {
+          actions = [
+            ...actions,
+            {
+              isNote: true,
+              position: [...selectedCell],
+              value: [...cell.notes],
+            },
+          ];
+        } else {
+          actions = [
+            ...actions,
+            {
+              isNote: false,
+              position: [...selectedCell],
+              value: cell.value,
+            },
+          ];
+        }
         rows[selectedCell[0]][selectedCell[1]].value = num;
         rows[selectedCell[0]][selectedCell[1]].notes = [];
       }
@@ -176,19 +230,55 @@
         selectedCell = [-1, -1];
         return;
       } else if (
-        (name === "Delete" ||
-          name === "BackSpace" ||
-          name === "0" ||
-          name === "۰") &&
+        (name === "Delete" || name === "BackSpace") &&
         !isFixed &&
         !isNoteEnabled
       ) {
+        const cell = rows[selectedCell[0]][selectedCell[1]];
+        if (cell.notes.length) {
+          actions = [
+            ...actions,
+            {
+              isNote: true,
+              position: [...selectedCell],
+              value: [...cell.notes],
+            },
+          ];
+        } else {
+          actions = [
+            ...actions,
+            {
+              isNote: false,
+              position: [...selectedCell],
+              value: cell.value,
+            },
+          ];
+        }
         rows[selectedCell[0]][selectedCell[1]].value = 0;
         rows[selectedCell[0]][selectedCell[1]].notes = [];
       } else if (name === "n") {
         isNoteEnabled = !isNoteEnabled;
       }
     }
+  };
+
+  const undo = () => {
+    if (!actions.length) {
+      return;
+    }
+    const action = actions.pop();
+    if (action.isNote) {
+      rows[action.position[0]][action.position[1]].value = 0;
+      rows[action.position[0]][action.position[1]].notes = [
+        ...(action.value as number[]),
+      ];
+    } else {
+      rows[action.position[0]][action.position[1]].notes = [];
+      rows[action.position[0]][action.position[1]].value =
+        action.value as number;
+    }
+    selectedCell = [...action.position];
+    actions = actions;
   };
 
   addEventListener("keydown", keyboardHandler);
@@ -241,6 +331,43 @@
 </script>
 
 <div class="h-[10px]" />
+<div
+  class="flex max-w-[400px] mx-auto align-middle justify-between select-none"
+>
+  <button
+    type="button"
+    on:click={undo}
+    class=" disabled:opacity-50"
+    disabled={!actions.length}
+  >
+    <svg
+      id="Layer_1"
+      data-name="Layer 1"
+      xmlns="http://www.w3.org/2000/svg"
+      width="32"
+      height="32"
+      viewBox="0 0 32 32"
+    >
+      <defs>
+        <style>
+          .cls-1 {
+            fill: none;
+          }
+        </style>
+      </defs>
+      <path
+        d="M20,10H7.8149l3.5874-3.5859L10,5,4,11,10,17l1.4023-1.4146L7.8179,12H20a6,6,0,0,1,0,12H12v2h8a8,8,0,0,0,0-16Z"
+      />
+      <rect
+        id="_Transparent_Rectangle_"
+        data-name="&lt;Transparent Rectangle&gt;"
+        class="cls-1"
+        width="32"
+        height="32"
+      />
+    </svg>
+  </button>
+</div>
 <div
   class={`flex max-w-[400px] mx-auto align-middle justify-between select-none ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
@@ -309,7 +436,7 @@
   }`}
 >
   <div
-    class={`px-3 w-20 text-gray-500 text-2xl font-bold ${
+    class={`px-3 w-20 text-gray-500 select-none text-2xl font-bold ${
       lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
     }`}
   >
