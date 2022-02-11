@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
+  import { fade } from "svelte/transition";
 
   let lang: "fa" | "en" = "en";
   let selectedCell: [number, number] = [-1, -1];
@@ -9,6 +10,7 @@
   };
   let isNoteEnabled = false;
   let isTimerShown = true;
+  let isMenuShown = false;
 
   type Action = {
     value: number | number[];
@@ -17,6 +19,7 @@
     position: [number, number];
   };
   let actions: Action[] = [];
+  let redoActions: Action[] = [];
 
   type Cell = {
     isFixed: boolean;
@@ -140,6 +143,10 @@
     isNoteEnabled = !isNoteEnabled;
   };
 
+  const menuClickHandler = () => {
+    isMenuShown = !isMenuShown;
+  };
+
   function isOfTypeMove(name: string): name is MoveType {
     return ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(name);
   }
@@ -206,6 +213,7 @@
         rows[selectedCell[0]][selectedCell[1]].notes = [];
       }
     }
+    redoActions = [];
   };
 
   const keyboardHandler = (e: KeyboardEvent) => {
@@ -256,10 +264,31 @@
         }
         rows[selectedCell[0]][selectedCell[1]].value = 0;
         rows[selectedCell[0]][selectedCell[1]].notes = [];
+        redoActions = [];
       } else if (name === "n") {
         isNoteEnabled = !isNoteEnabled;
       }
     }
+  };
+
+  const redo = () => {
+    if (!redoActions.length) {
+      return;
+    }
+    const action = redoActions.pop();
+    actions = [...actions, action];
+    if (action.isNote) {
+      rows[action.position[0]][action.position[1]].value = 0;
+      rows[action.position[0]][action.position[1]].notes = [
+        ...(action.value as number[]),
+      ];
+    } else {
+      rows[action.position[0]][action.position[1]].notes = [];
+      rows[action.position[0]][action.position[1]].value =
+        action.value as number;
+    }
+    selectedCell = [...action.position];
+    redoActions = redoActions;
   };
 
   const undo = () => {
@@ -267,6 +296,7 @@
       return;
     }
     const action = actions.pop();
+    redoActions = [...redoActions, action];
     if (action.isNote) {
       rows[action.position[0]][action.position[1]].value = 0;
       rows[action.position[0]][action.position[1]].notes = [
@@ -334,51 +364,55 @@
 <div
   class="flex max-w-[400px] mx-auto align-middle justify-between select-none"
 >
-  <button
-    type="button"
-    on:click={undo}
-    class=" disabled:opacity-50"
-    disabled={!actions.length}
-  >
-    <svg
-      id="Layer_1"
-      data-name="Layer 1"
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      viewBox="0 0 32 32"
-    >
-      <defs>
-        <style>
-          .cls-1 {
-            fill: none;
-          }
-        </style>
-      </defs>
-      <path
-        d="M20,10H7.8149l3.5874-3.5859L10,5,4,11,10,17l1.4023-1.4146L7.8179,12H20a6,6,0,0,1,0,12H12v2h8a8,8,0,0,0,0-16Z"
-      />
-      <rect
-        id="_Transparent_Rectangle_"
-        data-name="&lt;Transparent Rectangle&gt;"
-        class="cls-1"
-        width="32"
-        height="32"
-      />
-    </svg>
+  <button type="button" class="text-gray-600" on:click={menuClickHandler}>
+    {#if !isMenuShown}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    {:else}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    {/if}
   </button>
-</div>
-<div
-  class={`flex max-w-[400px] mx-auto align-middle justify-between select-none ${
-    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
-  }`}
->
-  <div class="flex items-center justify-between w-full ">
-    <div class="flex">
-      <label for="language">
-        <p class="mx-3 text-gray-700 font-medium  cursor-pointer">en</p>
-      </label>
-      <label for="language" class="flex items-center cursor-pointer">
+  {#if isMenuShown}
+    <div
+      transition:fade
+      class="z-50 origin-top-right absolute mt-8 w-48 rounded-md shadow-lg py-1 bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
+      role="menu"
+      aria-orientation="vertical"
+      aria-labelledby="user-menu-button"
+      tabindex="-1"
+    >
+      <!-- Active: "bg-gray-100", Not Active: "" -->
+      <label
+        for="language"
+        class={`flex items-center justify-between  cursor-pointer mt-2 mx-3 ${
+          lang === "fa" ? "" : "flex-row-reverse"
+        }`}
+      >
         <!-- toggle -->
         <div class="relative">
           <!-- input -->
@@ -395,39 +429,154 @@
           />
           <!-- dot -->
           <div
-            class="peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
-          />
+            class="flex items-center justify-center peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-gray-700"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
         </div>
         <!-- label -->
-        <div class="mx-3 text-gray-700 font-medium">fa</div>
+        <div class="text-white font-medium font-poppins">
+          {lang === "en" ? "English" : "فارسی"}
+        </div>
+      </label>
+      <label
+        for="timer"
+        class={`flex items-center justify-between mx-3 cursor-pointer mt-2 ${
+          lang === "fa" ? "" : "flex-row-reverse"
+        }`}
+      >
+        <!-- toggle -->
+        <div class="relative">
+          <!-- input -->
+          <input
+            id="timer"
+            type="checkbox"
+            checked={isTimerShown}
+            on:click={timerToggleHandler}
+            class="sr-only peer"
+          />
+          <!-- line -->
+          <div
+            class="w-10 h-4 bg-gray-400 peer-checked:bg-blue-500 transition-colors delay-200 rounded-full shadow-inner"
+          />
+          <!-- dot -->
+          <div
+            class="flex items-center justify-center peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+        </div>
+        <!-- label -->
+        <div
+          class={`text-white font-medium ${
+            lang === "fa" ? "font-vazir" : "font-poppins"
+          }`}
+        >
+          {lang === "fa" ? "تایمر" : "Timer"}
+        </div>
       </label>
     </div>
+  {/if}
+  <div>
+    <button
+      type="button"
+      on:click={undo}
+      class=" disabled:opacity-50"
+      disabled={!actions.length}
+    >
+      <svg
+        id="Layer_1"
+        data-name="Layer 1"
+        xmlns="http://www.w3.org/2000/svg"
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+      >
+        <defs>
+          <style>
+            .cls-1 {
+              fill: none;
+            }
+          </style>
+        </defs>
+        <path
+          d="M20,10H7.8149l3.5874-3.5859L10,5,4,11,10,17l1.4023-1.4146L7.8179,12H20a6,6,0,0,1,0,12H12v2h8a8,8,0,0,0,0-16Z"
+        />
+        <rect
+          id="_Transparent_Rectangle_"
+          data-name="&lt;Transparent Rectangle&gt;"
+          class="cls-1"
+          width="32"
+          height="32"
+        />
+      </svg>
+    </button>
+    <button
+      type="button"
+      on:click={redo}
+      class=" disabled:opacity-50"
+      disabled={!redoActions.length}
+    >
+      <svg
+        id="Layer_1"
+        data-name="Layer 1"
+        xmlns="http://www.w3.org/2000/svg"
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+      >
+        <defs>
+          <style>
+            .cls-1 {
+              fill: none;
+            }
+          </style>
+        </defs>
+        <path
+          d="M12,10H24.1851L20.5977,6.4141,22,5,28,11,22,17l-1.4023-1.4146L24.1821,12H12a6,6,0,0,0,0,12h8v2H12a8,8,0,0,1,0-16Z"
+          transform="translate(0 0)"
+        />
+        <rect
+          id="_Transparent_Rectangle_"
+          data-name="&lt;Transparent Rectangle&gt;"
+          class="cls-1"
+          width="32"
+          height="32"
+        />
+      </svg>
+    </button>
   </div>
-  <label for="timer" class="flex items-center cursor-pointer">
-    <!-- toggle -->
-    <div class="relative">
-      <!-- input -->
-      <input
-        id="timer"
-        type="checkbox"
-        checked={isTimerShown}
-        on:click={timerToggleHandler}
-        class="sr-only peer"
-      />
-      <!-- line -->
-      <div
-        class="w-10 h-4 bg-gray-400 peer-checked:bg-blue-500 transition-colors delay-200 rounded-full shadow-inner"
-      />
-      <!-- dot -->
-      <div
-        class="peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
-      />
-    </div>
-    <!-- label -->
-    <div class="mx-3 text-gray-700 font-medium">
-      {lang === "fa" ? "تایمر" : "Timer"}
-    </div>
-  </label>
+</div>
+<div
+  class={`flex max-w-[400px] mx-auto align-middle justify-between select-none ${
+    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
+  }`}
+>
+  <div class="flex items-center justify-between w-full " />
 </div>
 <div class="h-[10px]" />
 <div
