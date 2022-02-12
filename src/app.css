@@ -3,5 +3,19 @@
 @tailwind base;
 
 body {
-  background-color: antiquewhite;
+  background-color: white;
 }
+
+  .note-position {
+    /* transform: translate(calc(12px * var(--x)), calc(12px * var(--y))); */
+    transform: translate(calc(15px * var(--x)), calc(15px * var(--y)));
+  }
+  .with-stroke {
+    -webkit-text-stroke: 0.05em black;
+  }
+
+  .sample_farsi_digits {
+    -moz-font-feature-settings: "ss01";
+    -webkit-font-feature-settings: "ss01";
+    font-feature-settings: "ss01";
+  }

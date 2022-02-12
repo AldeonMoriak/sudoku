@@ -1,0 +1,1 @@
+  export type MoveType = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";

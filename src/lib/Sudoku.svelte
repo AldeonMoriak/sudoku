@@ -1,10 +1,18 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
-  import { fade } from "svelte/transition";
+  import Header from "../components/Header.svelte";
+  import type { Action } from "src/types/Action";
+  import type { Cell } from "src/types/Cell";
+  import type { Lang } from "src/types/Lang";
+  import type { MoveType } from "src/types/MoveType";
 
-  let lang: "fa" | "en" = "en";
+  import { onDestroy } from "svelte";
+  import type { Box } from "src/types/Box";
+  import Board from "../components/Board.svelte";
+  import InputNumbers from "../components/InputNumbers.svelte";
+
+  let lang: Lang = "en";
   let selectedCell: [number, number] = [-1, -1];
-  let selectedBox = {
+  let selectedBox: Box = {
     rows: [],
     columns: [],
   };
@@ -12,20 +20,8 @@
   let isTimerShown = true;
   let isMenuShown = false;
 
-  type Action = {
-    value: number | number[];
-    isNote: boolean;
-    command?: "add" | "remove";
-    position: [number, number];
-  };
   let actions: Action[] = [];
   let redoActions: Action[] = [];
-
-  type Cell = {
-    isFixed: boolean;
-    value: number;
-    notes: number[];
-  };
 
   const numKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const farsiNumKeys = ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -97,8 +93,6 @@
       return column;
     });
   });
-
-  type MoveType = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
 
   const moveHandler = (direction: MoveType) => {
     switch (direction) {
@@ -271,12 +265,7 @@
     }
   };
 
-  const redo = () => {
-    if (!redoActions.length) {
-      return;
-    }
-    const action = redoActions.pop();
-    actions = [...actions, action];
+  const actionHandler = (action: Action) => {
     if (action.isNote) {
       rows[action.position[0]][action.position[1]].value = 0;
       rows[action.position[0]][action.position[1]].notes = [
@@ -288,6 +277,26 @@
         action.value as number;
     }
     selectedCell = [...action.position];
+  };
+
+  const redo = () => {
+    if (!redoActions.length) {
+      return;
+    }
+    const action = redoActions.pop();
+    const cell = rows[action.position[0]][action.position[1]];
+    if (cell.notes.length) {
+      actions = [
+        ...actions,
+        { value: cell.notes, position: [...action.position], isNote: true },
+      ];
+    } else {
+      actions = [
+        ...actions,
+        { value: cell.value, position: [...action.position], isNote: false },
+      ];
+    }
+    actionHandler(action);
     redoActions = redoActions;
   };
 
@@ -296,18 +305,19 @@
       return;
     }
     const action = actions.pop();
-    redoActions = [...redoActions, action];
-    if (action.isNote) {
-      rows[action.position[0]][action.position[1]].value = 0;
-      rows[action.position[0]][action.position[1]].notes = [
-        ...(action.value as number[]),
+    const cell = rows[action.position[0]][action.position[1]];
+    if (cell.notes.length) {
+      redoActions = [
+        ...redoActions,
+        { value: cell.notes, position: [...action.position], isNote: true },
       ];
     } else {
-      rows[action.position[0]][action.position[1]].notes = [];
-      rows[action.position[0]][action.position[1]].value =
-        action.value as number;
+      redoActions = [
+        ...redoActions,
+        { value: cell.value, position: [...action.position], isNote: false },
+      ];
     }
-    selectedCell = [...action.position];
+    actionHandler(action);
     actions = actions;
   };
 
@@ -360,217 +370,18 @@
   };
 </script>
 
-<div class="h-[10px]" />
-<div
-  class="flex max-w-[400px] mx-auto align-middle justify-between select-none"
->
-  <button type="button" class="text-gray-600" on:click={menuClickHandler}>
-    {#if !isMenuShown}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 6h16M4 12h16M4 18h16"
-        />
-      </svg>
-    {:else}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    {/if}
-  </button>
-  {#if isMenuShown}
-    <div
-      transition:fade
-      class="z-50 origin-top-right absolute mt-8 w-48 rounded-md shadow-lg py-1 bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
-      role="menu"
-      aria-orientation="vertical"
-      aria-labelledby="user-menu-button"
-      tabindex="-1"
-    >
-      <!-- Active: "bg-gray-100", Not Active: "" -->
-      <label
-        for="language"
-        class={`flex items-center justify-between  cursor-pointer mt-2 mx-3 ${
-          lang === "fa" ? "" : "flex-row-reverse"
-        }`}
-      >
-        <!-- toggle -->
-        <div class="relative">
-          <!-- input -->
-          <input
-            id="language"
-            type="checkbox"
-            on:click={languageHandler}
-            checked={lang === "fa"}
-            class="sr-only peer"
-          />
-          <!-- line -->
-          <div
-            class="w-10 h-4 bg-gray-400 peer-checked:bg-blue-500 transition-colors delay-200 rounded-full shadow-inner"
-          />
-          <!-- dot -->
-          <div
-            class="flex items-center justify-center peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 text-gray-700"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </div>
-        </div>
-        <!-- label -->
-        <div class="text-white font-medium font-poppins">
-          {lang === "en" ? "English" : "فارسی"}
-        </div>
-      </label>
-      <label
-        for="timer"
-        class={`flex items-center justify-between mx-3 cursor-pointer mt-2 ${
-          lang === "fa" ? "" : "flex-row-reverse"
-        }`}
-      >
-        <!-- toggle -->
-        <div class="relative">
-          <!-- input -->
-          <input
-            id="timer"
-            type="checkbox"
-            checked={isTimerShown}
-            on:click={timerToggleHandler}
-            class="sr-only peer"
-          />
-          <!-- line -->
-          <div
-            class="w-10 h-4 bg-gray-400 peer-checked:bg-blue-500 transition-colors delay-200 rounded-full shadow-inner"
-          />
-          <!-- dot -->
-          <div
-            class="flex items-center justify-center peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-        </div>
-        <!-- label -->
-        <div
-          class={`text-white font-medium ${
-            lang === "fa" ? "font-vazir" : "font-poppins"
-          }`}
-        >
-          {lang === "fa" ? "تایمر" : "Timer"}
-        </div>
-      </label>
-    </div>
-  {/if}
-  <div>
-    <button
-      type="button"
-      on:click={undo}
-      class=" disabled:opacity-50"
-      disabled={!actions.length}
-    >
-      <svg
-        id="Layer_1"
-        data-name="Layer 1"
-        xmlns="http://www.w3.org/2000/svg"
-        width="32"
-        height="32"
-        viewBox="0 0 32 32"
-      >
-        <defs>
-          <style>
-            .cls-1 {
-              fill: none;
-            }
-          </style>
-        </defs>
-        <path
-          d="M20,10H7.8149l3.5874-3.5859L10,5,4,11,10,17l1.4023-1.4146L7.8179,12H20a6,6,0,0,1,0,12H12v2h8a8,8,0,0,0,0-16Z"
-        />
-        <rect
-          id="_Transparent_Rectangle_"
-          data-name="&lt;Transparent Rectangle&gt;"
-          class="cls-1"
-          width="32"
-          height="32"
-        />
-      </svg>
-    </button>
-    <button
-      type="button"
-      on:click={redo}
-      class=" disabled:opacity-50"
-      disabled={!redoActions.length}
-    >
-      <svg
-        id="Layer_1"
-        data-name="Layer 1"
-        xmlns="http://www.w3.org/2000/svg"
-        width="32"
-        height="32"
-        viewBox="0 0 32 32"
-      >
-        <defs>
-          <style>
-            .cls-1 {
-              fill: none;
-            }
-          </style>
-        </defs>
-        <path
-          d="M12,10H24.1851L20.5977,6.4141,22,5,28,11,22,17l-1.4023-1.4146L24.1821,12H12a6,6,0,0,0,0,12h8v2H12a8,8,0,0,1,0-16Z"
-          transform="translate(0 0)"
-        />
-        <rect
-          id="_Transparent_Rectangle_"
-          data-name="&lt;Transparent Rectangle&gt;"
-          class="cls-1"
-          width="32"
-          height="32"
-        />
-      </svg>
-    </button>
-  </div>
-</div>
+<Header
+  menuClickHandler={menuClickHandler}
+  {isMenuShown}
+  {lang}
+  {isTimerShown}
+  {timerToggleHandler}
+  {undo}
+  {actions}
+  {redoActions}
+  {redo}
+  {languageHandler}
+/>
 <div
   class={`flex max-w-[400px] mx-auto align-middle justify-between select-none ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
@@ -593,156 +404,23 @@
   </div>
 </div>
 <div class="h-[50px]" />
-<div
-  class={`flex flex-col max-w-[400px] mx-auto align-middle justify-center border-2 border-black select-none ${
-    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
-  }`}
->
-  {#each rows as row, rowIndex}
-    <div
-      class={`grid grid-cols-9 text-center ${
-        rowIndex === 5 || rowIndex === 2
-          ? "border-b-4 border-b-black"
-          : rowIndex !== 8
-          ? "border-b border-b-black"
-          : ""
-      }`}
-    >
-      {#each row as cell, colIndex}
-        <div
-          on:click={() => handleClick(rowIndex, colIndex)}
-          class={`w-full p-1 h-full text-black font-bold text-3xl ${
-            colIndex === 2 || colIndex === 5
-              ? "border-r-4 border-r-black"
-              : colIndex !== 8
-              ? "border-r border-r-black"
-              : ""
-          } ${
-            cell.isFixed
-              ? "text-black cursor-default bg-gray-300"
-              : "text-black cursor-pointer bg-white"
-          } ${
-            selectedCell.join("") === [rowIndex, colIndex].join("")
-              ? !cell.notes.length
-                ? "with-stroke text-cyan-500 bg-gray-900"
-                : "bg-gray-900"
-              : selectedCell[0] !== -1 &&
-                rows[selectedCell[0]][selectedCell[1]]?.value === cell.value &&
-                !cell.notes.length
-              ? "with-stroke text-cyan-500"
-              : ""
-          } ${
-            selectedCell.join("") !== [rowIndex, colIndex].join("") &&
-            (selectedCell[0] === rowIndex ||
-              selectedCell[1] === colIndex ||
-              (selectedBox.rows.includes(rowIndex) &&
-                selectedBox.columns.includes(colIndex)))
-              ? cell.isFixed
-                ? "bg-blue-200"
-                : selectedCell[0] !== -1 &&
-                  cell.notes.includes(
-                    rows[selectedCell[0]][selectedCell[1]]?.value
-                  )
-                ? "bg-yellow-100"
-                : "bg-blue-100"
-              : ""
-          } ${cell.notes.length ? "flex items-center justify-center" : ""} ${
-            selectedCell[0] !== -1 &&
-            cell.notes.includes(rows[selectedCell[0]][selectedCell[1]]?.value)
-              ? "bg-yellow-100"
-              : ""
-          }`}
-        >
-          <!-- <svelte:component this={numSvgs[cell.value]} /> -->
-          {#if cell.value}
-            {cell.value}
-          {:else if cell.notes.length}
-            {#each cell.notes as note}
-              <span
-                class={`text-xs  absolute flex items-center justify-center note-position ${
-                  selectedCell[0] !== -1 &&
-                  rows[selectedCell[0]][selectedCell[1]]?.value === note
-                    ? "text-yellow-600"
-                    : "text-gray-400"
-                }`}
-                style={notePositionHandler(note)}>{note}</span
-              >
-            {/each}
-          {/if}
-        </div>
-      {/each}
-    </div>
-  {/each}
-</div>
 
-<div dir="rtl" class="max-w-[400px] mx-auto grid grid-cols-9 text-center mt-2">
-  <div
-    class={` border-2 rounded-lg py-2  text-xl cursor-pointer flex justify-center ${
-      isNoteEnabled
-        ? "bg-yellow-200 text-gray-800 border-gray-800"
-        : "bg-gray-800 text-white  border-white"
-    }`}
-    on:click={noteToggleHandler}
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-      />
-    </svg>
-  </div>
-</div>
+<Board
+  {lang}
+  {rows}
+  {handleClick}
+  {selectedCell}
+  {selectedBox}
+  {notePositionHandler}
+/>
 
-<div
-  class={`max-w-[400px] mx-auto grid grid-cols-9 text-center mt-2  ${
-    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
-  }`}
->
-  {#each numKeys as num, numIndex ("num" + numIndex)}
-    <div
-      class={` border-2 rounded-lg py-2 px-1 text-2xl font-bold cursor-pointer select-none ${
-        isNoteEnabled
-          ? selectedCell[0] !== -1 &&
-            rows[selectedCell[0]][selectedCell[1]]?.notes.includes(num)
-            ? "bg-yellow-200 text-gray-800 border-gray-800"
-            : "bg-gray-200  text-gray-800 border-gray-800"
-          : selectedCell[0] !== -1 &&
-            rows[selectedCell[0]][selectedCell[1]].value === num
-          ? "bg-gray-100 text-gray-800 border-gray-800"
-          : "bg-gray-800 text-white  border-white"
-      } ${
-        selectedCell[0] !== -1 && rows[selectedCell[0]][selectedCell[1]].isFixed
-          ? "opacity-50 cursor-not-allowed"
-          : ""
-      }`}
-      on:click={() => fillCellHandler(num)}
-    >
-      {num}
-    </div>
-  {/each}
-</div>
+<InputNumbers
+  {isNoteEnabled}
+  {noteToggleHandler}
+  {lang}
+  {numKeys}
+  {selectedCell}
+  {rows}
+  {fillCellHandler}
+/>
 
-<style>
-  .with-stroke {
-    -webkit-text-stroke: 0.05em black;
-  }
-
-  .sample_farsi_digits {
-    -moz-font-feature-settings: "ss01";
-    -webkit-font-feature-settings: "ss01";
-    font-feature-settings: "ss01";
-  }
-
-  .note-position {
-    /* transform: translate(calc(12px * var(--x)), calc(12px * var(--y))); */
-    transform: translate(calc(15px * var(--x)), calc(15px * var(--y)));
-  }
-</style>
