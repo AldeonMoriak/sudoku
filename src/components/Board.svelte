@@ -2,7 +2,6 @@
   import type { Box } from "src/types/Box";
   import type { Cell } from "src/types/Cell";
   import type { Lang } from "src/types/Lang";
-  import { clickOutside } from "../helpers/clickOutside";
 
   export let lang: Lang;
   export let rows: Cell[][];
@@ -13,8 +12,6 @@
 </script>
 
 <div
-  use:clickOutside
-  on:click_outside={() => handleClick(-1, -1)}
   class={`flex flex-col max-w-[400px] mx-auto align-middle justify-center border-2 border-black select-none ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}

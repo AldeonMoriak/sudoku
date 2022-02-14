@@ -10,6 +10,7 @@
   import Header from "../components/Header.svelte";
   import InputNumbers from "../components/InputNumbers.svelte";
   import { getPuzzleOfTheDay } from "../helpers/puzzles";
+  import { clickOutside } from "../helpers/clickOutside";
 
   let lang: Lang = "en";
   let selectedCell: [number, number] = [-1, -1];
@@ -29,14 +30,14 @@
   const farsiNumKeys = ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 
   let leftTime = ["00", "00", "00"];
-  const startDate = Date.now();
+  let startDate = Date.now();
 
   const timerHandler = () => {
     const seconds = Date.now() - startDate;
     leftTime = toStringTime(seconds);
   };
 
-  const timer = setInterval(timerHandler, 500);
+  let timer = setInterval(timerHandler, 500);
 
   const toStringTime = (time: number) => {
     const seconds = time / 1000;
@@ -84,7 +85,7 @@
   };
 
   let numbers = getPuzzleReady(selectedPuzzle);
-  let rows = [];
+  let rows: Cell[][] = [];
 
   const typeMenuOpenHandler = () => {
     isTypesMenuShown = true;
@@ -95,6 +96,9 @@
   };
 
   const onChangeDifficulty = () => {
+    clearInterval(timer);
+    startDate = Date.now();
+    timer = setInterval(timerHandler, 500);
     typeMenuCloseHandler();
     puzzleOfTheDay = getPuzzleOfTheDay(difficulty.en);
     selectedPuzzle = puzzleOfTheDay.clearGrid;
@@ -236,7 +240,17 @@
       }
     }
     redoActions = [];
+    checkIsGameDone();
   };
+  
+  const checkIsGameDone = () => {
+    const isGameDone = rows.map(el => el.map(r => r.value)).flat().join('') === puzzleOfTheDay.puzzleGrid.join('')
+    if(isGameDone) {
+    const message = lang === 'fa' ? 'ایول بازی تموم شد\n' + leftTime.join(':') + ' طول کشید.' : 'Well done!\n' + leftTime.join(':') + ' took to finish the game.';
+      alert(message)
+      clearInterval(timer);
+    }
+  }
 
   const keyboardHandler = (e: KeyboardEvent) => {
     e.preventDefault();
@@ -402,8 +416,8 @@
 </script>
 
 <Header
-  {isTypesMenuShown}
   {typeMenuOpenHandler}
+  {isTypesMenuShown}
   {typeMenuCloseHandler}
   {changePuzzleDifficulty}
   {difficulty}
@@ -443,6 +457,11 @@
 </div>
 <div class="h-[30px]" />
 
+<div
+class="w-[400px] mx-auto"
+  use:clickOutside
+  on:click_outside={() => handleClick(-1, -1)}
+>
 <Board
   {lang}
   {rows}
@@ -462,3 +481,4 @@
   {rows}
   {fillCellHandler}
 />
+</div>
