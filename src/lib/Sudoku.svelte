@@ -4,7 +4,7 @@
   import type { Cell } from "src/types/Cell";
   import type { Lang } from "src/types/Lang";
   import type { MoveType } from "src/types/MoveType";
-  import type { PuzzleType } from "src/types/PuzzleType";
+  import type { FarsiPuzzleType, PuzzleType } from "src/types/PuzzleType";
   import { onDestroy } from "svelte";
   import Board from "../components/Board.svelte";
   import Header from "../components/Header.svelte";
@@ -20,6 +20,7 @@
   let isNoteEnabled = false;
   let isTimerShown = true;
   let isMenuShown = false;
+  let isTypesMenuShown = false;
 
   let actions: Action[] = [];
   let redoActions: Action[] = [];
@@ -52,10 +53,26 @@
     ];
   };
 
+  let difficulty: { en: PuzzleType; fa: FarsiPuzzleType } = {
+    en: "easy",
+    fa: "آسان",
+  };
+  let difficultyList: { en: PuzzleType; fa: FarsiPuzzleType }[] = [
+    { fa: "آسان", en: "easy" },
+    { fa: "متوسط", en: "medium" },
+    { fa: "سخت", en: "hard" },
+    { fa: "حرفه ای", en: "expert" },
+    { fa: "وحشیانه", en: "evil" },
+  ];
+  let puzzleOfTheDay = getPuzzleOfTheDay(difficulty.en);
+  let selectedPuzzle = puzzleOfTheDay.clearGrid;
 
-  const difficulty: PuzzleType = "easy";
-  const puzzleOfTheDay = getPuzzleOfTheDay(difficulty);
-  const selectedPuzzle = puzzleOfTheDay.clearGrid;
+  const changePuzzleDifficulty = (type: {
+    en: PuzzleType;
+    fa: FarsiPuzzleType;
+  }) => {
+    difficulty = type;
+  };
   const getPuzzleReady = (p: number[]) => {
     const puzzle: number[][] = [[], [], [], [], [], [], [], [], []];
     p.forEach((num, index) => {
@@ -67,17 +84,39 @@
   };
 
   let numbers = getPuzzleReady(selectedPuzzle);
+  let rows = [];
 
-  let rows = numbers.map((row) => {
-    return row.map((col) => {
-      const column: Cell = {
-        value: col,
-        isFixed: col !== 0 ? true : false,
-        notes: [] as number[],
-      };
-      return column;
+  const typeMenuOpenHandler = () => {
+    isTypesMenuShown = true;
+  };
+
+  const typeMenuCloseHandler = () => {
+    isTypesMenuShown = false;
+  };
+
+  const onChangeDifficulty = () => {
+    typeMenuCloseHandler();
+    puzzleOfTheDay = getPuzzleOfTheDay(difficulty.en);
+    selectedPuzzle = puzzleOfTheDay.clearGrid;
+    numbers = getPuzzleReady(selectedPuzzle);
+    rows = rowsHandler(numbers);
+  };
+
+  const rowsHandler = (numbers: number[][]) => {
+    return numbers.map((row) => {
+      return row.map((col) => {
+        const column: Cell = {
+          value: col,
+          isFixed: col !== 0 ? true : false,
+          notes: [] as number[],
+        };
+        return column;
+      });
     });
-  });
+  };
+  rows = rowsHandler(numbers);
+
+  $: onChangeDifficulty(), difficulty;
 
   const moveHandler = (direction: MoveType) => {
     switch (direction) {
@@ -122,8 +161,12 @@
     isNoteEnabled = !isNoteEnabled;
   };
 
-  const menuClickHandler = () => {
-    isMenuShown = !isMenuShown;
+  const menuOpenHandler = () => {
+    isMenuShown = true;
+  };
+
+  const menuCloseHandler = () => {
+    isMenuShown = false;
   };
 
   function isOfTypeMove(name: string): name is MoveType {
@@ -214,7 +257,7 @@
           fillCellHandler(numKeys[index]);
         }
       } else if (name === "Escape") {
-        selectedCell = [-1, -1];
+        handleClick(-1, -1);
         return;
       } else if (name === "Delete" || name === "BackSpace") {
         deleteHandler();
@@ -359,7 +402,14 @@
 </script>
 
 <Header
-  {menuClickHandler}
+  {isTypesMenuShown}
+  {typeMenuOpenHandler}
+  {typeMenuCloseHandler}
+  {changePuzzleDifficulty}
+  {difficulty}
+  {difficultyList}
+  {menuOpenHandler}
+  {menuCloseHandler}
   {isMenuShown}
   {lang}
   {isTimerShown}

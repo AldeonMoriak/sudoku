@@ -2,6 +2,7 @@
   import type { Box } from "src/types/Box";
   import type { Cell } from "src/types/Cell";
   import type { Lang } from "src/types/Lang";
+  import { clickOutside } from "../helpers/clickOutside";
 
   export let lang: Lang;
   export let rows: Cell[][];
@@ -12,11 +13,13 @@
 </script>
 
 <div
+  use:clickOutside
+  on:click_outside={() => handleClick(-1, -1)}
   class={`flex flex-col max-w-[400px] mx-auto align-middle justify-center border-2 border-black select-none ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}
 >
-  {#each rows as row, rowIndex ('row' + rowIndex)}
+  {#each rows as row, rowIndex ("row" + rowIndex)}
     <div
       class={`grid grid-cols-9 text-center ${
         rowIndex === 5 || rowIndex === 2
@@ -26,7 +29,7 @@
           : ""
       }`}
     >
-      {#each row as cell, colIndex ('column' + colIndex)}
+      {#each row as cell, colIndex ("column" + colIndex)}
         <div
           on:click={() => handleClick(rowIndex, colIndex)}
           class={`w-full p-1 h-full text-black font-bold text-3xl ${
@@ -75,7 +78,7 @@
           {#if cell.value}
             {cell.value}
           {:else if cell.notes.length}
-            {#each cell.notes as note ('note' + rowIndex + colIndex + note)}
+            {#each cell.notes as note ("note" + rowIndex + colIndex + note)}
               <span
                 class={`text-xs  absolute flex items-center justify-center note-position ${
                   selectedCell[0] !== -1 &&
