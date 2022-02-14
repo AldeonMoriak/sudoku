@@ -1,0 +1,1 @@
+export type PuzzleType = "easy" | 'medium' | 'hard' | 'expert' | 'evil';
