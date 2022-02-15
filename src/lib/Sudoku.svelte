@@ -98,6 +98,8 @@
 
   const onChangeDifficulty = () => {
     clearInterval(timer);
+    actions = [];
+    redoActions = [];
     startDate = Date.now();
     timer = setInterval(timerHandler, 500);
     typeMenuCloseHandler();
