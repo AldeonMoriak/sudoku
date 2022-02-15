@@ -180,6 +180,9 @@
   const fillCellHandler = (num: number) => {
     if (selectedCell[0] !== -1) {
       const cell = rows[selectedCell[0]][selectedCell[1]];
+      if(cell.isFixed) {
+        return;
+      }
       if (isNoteEnabled) {
         if (cell.notes.includes(num)) {
           actions = [
@@ -238,19 +241,26 @@
         rows[selectedCell[0]][selectedCell[1]].value = num;
         rows[selectedCell[0]][selectedCell[1]].notes = [];
       }
+      redoActions = [];
+      checkIsGameDone();
     }
-    redoActions = [];
-    checkIsGameDone();
   };
-  
+
   const checkIsGameDone = () => {
-    const isGameDone = rows.map(el => el.map(r => r.value)).flat().join('') === puzzleOfTheDay.puzzleGrid.join('')
-    if(isGameDone) {
-    const message = lang === 'fa' ? 'ایول بازی تموم شد\n' + leftTime.join(':') + ' طول کشید.' : 'Well done!\n' + leftTime.join(':') + ' took to finish the game.';
-      alert(message)
+    const isGameDone =
+      rows
+        .map((el) => el.map((r) => r.value))
+        .flat()
+        .join("") === puzzleOfTheDay.puzzleGrid.join("");
+    if (isGameDone) {
+      const message =
+        lang === "fa"
+          ? "ایول بازی تموم شد\n" + leftTime.join(":") + " طول کشید."
+          : "Well done!\n" + leftTime.join(":") + " took to finish the game.";
+      alert(message);
       clearInterval(timer);
     }
-  }
+  };
 
   const keyboardHandler = (e: KeyboardEvent) => {
     e.preventDefault();
@@ -458,27 +468,27 @@
 <div class="h-[30px]" />
 
 <div
-class="w-[400px] mx-auto"
+  class="w-[400px] mx-auto"
   use:clickOutside
   on:click_outside={() => handleClick(-1, -1)}
 >
-<Board
-  {lang}
-  {rows}
-  {handleClick}
-  {selectedCell}
-  {selectedBox}
-  {notePositionHandler}
-/>
+  <Board
+    {lang}
+    {rows}
+    {handleClick}
+    {selectedCell}
+    {selectedBox}
+    {notePositionHandler}
+  />
 
-<InputNumbers
-  {deleteHandler}
-  {isNoteEnabled}
-  {noteToggleHandler}
-  {lang}
-  {numKeys}
-  {selectedCell}
-  {rows}
-  {fillCellHandler}
-/>
+  <InputNumbers
+    {deleteHandler}
+    {isNoteEnabled}
+    {noteToggleHandler}
+    {lang}
+    {numKeys}
+    {selectedCell}
+    {rows}
+    {fillCellHandler}
+  />
 </div>
