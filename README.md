@@ -15,3 +15,4 @@ I wanted to test out svelte and had an idea of creating a Sudoku app with featur
 - [x] Redo and Undo actions
 - [ ] Mistake checker
 - [ ] Selecting previous days' puzzles 
+- [ ] Hints (wanna figure out how to implement advanced hints)
