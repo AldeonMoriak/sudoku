@@ -28,7 +28,7 @@
 </script>
 
 <div
-  class="flex max-w-[400px] mx-auto align-middle justify-between select-none"
+  class="flex max-w-[400px] w-full min-w-[350px] mx-auto align-middle justify-between select-none"
 >
   <div use:clickOutside on:click_outside={menuCloseHandler}>
     <button
@@ -179,7 +179,7 @@
     on:click_outside={typeMenuCloseHandler}
   >
     <div
-      class="cursor-pointer font-bold text-gray-500 text-xl"
+      class="cursor-pointer  text-gray-500 text-base"
       dir={lang === "fa" ? "rtl" : "ltr"}
     >
       {#if isTypesMenuShown}

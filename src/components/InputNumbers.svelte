@@ -13,7 +13,7 @@
   export let deleteHandler: () => void;
 </script>
 
-<div dir="rtl" class="max-w-[400px] mx-auto grid grid-cols-9 text-center mt-2">
+<div dir="rtl" class="max-w-[400px] min-w-[350px] w-full mx-auto grid grid-cols-9 text-center mt-2">
   <div
     on:click={deleteHandler}
     class="border-2 rounded-lg py-2 text-xl cursor-pointer flex justify-center bg-gray-700 text-white  border-white"
@@ -53,7 +53,7 @@
 </div>
 
 <div
-  class={`max-w-[400px] mx-auto grid grid-cols-9 text-center mt-2  ${
+  class={`max-w-[400px] min-w-[350px] w-full mx-auto grid grid-cols-9 text-center mt-2  ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}
 >

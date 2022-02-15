@@ -12,7 +12,7 @@
 </script>
 
 <div
-  class={`flex flex-col max-w-[400px] mx-auto align-middle justify-center border-2 border-black select-none ${
+  class={`flex flex-col max-w-[400px] min-w-[350px] w-full mx-auto align-middle justify-center border-2 border-black select-none ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}
 >

@@ -25,6 +25,7 @@
 
   let actions: Action[] = [];
   let redoActions: Action[] = [];
+  $: innerHeight = 0;
 
   const numKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const farsiNumKeys = ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -180,7 +181,7 @@
   const fillCellHandler = (num: number) => {
     if (selectedCell[0] !== -1) {
       const cell = rows[selectedCell[0]][selectedCell[1]];
-      if(cell.isFixed) {
+      if (cell.isFixed) {
         return;
       }
       if (isNoteEnabled) {
@@ -397,7 +398,7 @@
       selectedBox.columns.push(boxColumnId + i);
     }
   };
-
+  
   // watches the selectCell and calls selectBoxHandler when its values changes
   $: selectBoxHandler(), [selectedCell];
 
@@ -424,6 +425,7 @@
     }
   };
 </script>
+<svelte:window bind:innerHeight />
 
 <Header
   {typeMenuOpenHandler}
@@ -444,31 +446,29 @@
   {redo}
   {languageHandler}
 />
-<div
-  class={`flex max-w-[400px] mx-auto align-middle justify-between select-none ${
-    lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
-  }`}
->
-  <div class="flex items-center justify-between w-full " />
-</div>
-<div class="h-[10px]" />
-<div
-  class={`mx-auto w-full flex justify-center ${
-    isTimerShown ? "opacity-100" : "opacity-0"
-  }`}
->
+{#if innerHeight > 650}
   <div
-    class={`px-3 w-20 text-gray-500 select-none text-2xl font-bold ${
+    class={`flex max-w-[400px] w-full mx-auto align-middle justify-between select-none ${
       lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
     }`}
   >
-    {leftTime[0] === "00" ? leftTime.slice(1).join(":") : leftTime.join(":")}
+    <div class="h-[10px]" />
+    <div
+      class={`mx-auto w-full flex justify-center ${
+        isTimerShown ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div class="px-3 w-20 text-gray-500 select-none text-2xl font-bold">
+        {leftTime[0] === "00"
+          ? leftTime.slice(1).join(":")
+          : leftTime.join(":")}
+      </div>
+    </div>
   </div>
-</div>
-<div class="h-[30px]" />
-
+{/if}
+<div class="h-[10px]" />
 <div
-  class="w-[400px] mx-auto"
+  class="max-w-[400px] w-full mx-auto"
   use:clickOutside
   on:click_outside={() => handleClick(-1, -1)}
 >
