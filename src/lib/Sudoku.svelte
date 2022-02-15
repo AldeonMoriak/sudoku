@@ -11,6 +11,7 @@
   import InputNumbers from "../components/InputNumbers.svelte";
   import { getPuzzleOfTheDay } from "../helpers/puzzles";
   import { clickOutside } from "../helpers/clickOutside";
+  import Modal from "../components/Modal.svelte";
 
   let lang: Lang = "en";
   let selectedCell: [number, number] = [-1, -1];
@@ -18,6 +19,10 @@
     rows: [],
     columns: [],
   };
+  let message = [];
+          
+;
+  let isModalShown = false;
   let isNoteEnabled = false;
   let isTimerShown = true;
   let isMenuShown = false;
@@ -256,13 +261,18 @@
         .flat()
         .join("") === puzzleOfTheDay.puzzleGrid.join("");
     if (isGameDone) {
-      const message =
+      message =
         lang === "fa"
-          ? "ایول بازی تموم شد\n" + leftTime.join(":") + " طول کشید."
-          : "Well done!\n" + leftTime.join(":") + " took to finish the game.";
-      alert(message);
+          ? ["ایول بازی تموم شد!",leftTime.join(":") + " طول کشید تا بازی تموم بشه."]
+          : ["Well done!", leftTime.join(":") + " took to finish the game."];
+      isModalShown = true;
       clearInterval(timer);
     }
+  };
+
+  const closeModal = () => {
+    isModalShown = false;
+    message = [];
   };
 
   const keyboardHandler = (e: KeyboardEvent) => {
@@ -400,7 +410,7 @@
       selectedBox.columns.push(boxColumnId + i);
     }
   };
-  
+
   // watches the selectCell and calls selectBoxHandler when its values changes
   $: selectBoxHandler(), [selectedCell];
 
@@ -427,7 +437,16 @@
     }
   };
 </script>
+
 <svelte:window bind:innerHeight />
+<Modal
+  {lang}
+  closeButton={lang === "fa" ? "بستن" : "Close"}
+  {message}
+  title={lang === "fa" ? "هورا!" : "Hooray!"}
+  {closeModal}
+  {isModalShown}
+/>
 
 <Header
   {typeMenuOpenHandler}
