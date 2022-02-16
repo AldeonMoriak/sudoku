@@ -25,6 +25,8 @@
   export let typeMenuOpenHandler: () => void;
   export let typeMenuCloseHandler: () => void;
   export let isTypesMenuShown: boolean;
+  export let isCheckerOn: boolean;
+  export let checkerHandler: () => void;
 </script>
 
 <div
@@ -168,6 +170,44 @@
             }`}
           >
             {lang === "fa" ? "تایمر" : "Timer"}
+          </div>
+        </label>
+        <label
+          for="checker"
+          class={`flex items-center justify-between cursor-pointer px-4 py-2 ${
+            lang === "fa" ? "" : "flex-row-reverse"
+          }`}
+        >
+          <!-- toggle -->
+          <div class="relative">
+            <!-- input -->
+            <input
+              id="checker"
+              type="checkbox"
+              checked={isCheckerOn}
+              on:click={checkerHandler}
+              class="sr-only peer"
+            />
+            <!-- line -->
+            <div
+              class="w-10 h-4 bg-gray-400 peer-checked:bg-blue-500 transition-colors delay-200 rounded-full shadow-inner"
+            />
+            <!-- dot -->
+            <div
+              class="flex items-center justify-center peer-checked:translate-x-full delay-100 absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition"
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            </div>
+          </div>
+          <!-- label -->
+          <div
+            class={`text-white font-medium ${
+              lang === "fa" ? "font-vazir" : "font-poppins"
+            }`}
+          >
+            {lang === "fa" ? "خطاگیر" : "Error Checker"}
           </div>
         </label>
       </div>

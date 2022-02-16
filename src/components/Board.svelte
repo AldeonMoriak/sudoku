@@ -5,10 +5,12 @@
 
   export let lang: Lang;
   export let rows: Cell[][];
+  export let completedRows: Cell[][];
   export let handleClick: (rowIndex: number, colIndex: number) => void;
   export let selectedCell: [number, number];
   export let selectedBox: Box;
   export let notePositionHandler: (note: number) => string;
+  export let isCheckerOn: boolean;
 </script>
 
 <div
@@ -68,6 +70,12 @@
             selectedCell[0] !== -1 &&
             cell.notes.includes(rows[selectedCell[0]][selectedCell[1]]?.value)
               ? "bg-yellow-100"
+              : ""
+          } ${
+            cell.value !== 0 && isCheckerOn
+              ? completedRows[rowIndex][colIndex].value !== cell.value
+                ? "text-red-500"
+                : ""
               : ""
           }`}
         >

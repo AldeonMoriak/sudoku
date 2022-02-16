@@ -20,6 +20,7 @@
     columns: [],
   };
   let message = [];
+  let isCheckerOn = true;
           
 ;
   let isModalShown = false;
@@ -42,6 +43,10 @@
     const seconds = Date.now() - startDate;
     leftTime = toStringTime(seconds);
   };
+  
+  const checkerHandler = () => {
+    isCheckerOn = !isCheckerOn;
+  }
 
   let timer = setInterval(timerHandler, 500);
 
@@ -64,6 +69,7 @@
     en: "easy",
     fa: "آسان",
   };
+
   let difficultyList: { en: PuzzleType; fa: FarsiPuzzleType }[] = [
     { fa: "آسان", en: "easy" },
     { fa: "متوسط", en: "medium" },
@@ -71,6 +77,7 @@
     { fa: "حرفه ای", en: "expert" },
     { fa: "وحشیانه", en: "evil" },
   ];
+
   let puzzleOfTheDay = getPuzzleOfTheDay(difficulty.en);
   let selectedPuzzle = puzzleOfTheDay.clearGrid;
 
@@ -80,6 +87,7 @@
   }) => {
     difficulty = type;
   };
+
   const getPuzzleReady = (p: number[]) => {
     const puzzle: number[][] = [[], [], [], [], [], [], [], [], []];
     p.forEach((num, index) => {
@@ -92,6 +100,7 @@
 
   let numbers = getPuzzleReady(selectedPuzzle);
   let rows: Cell[][] = [];
+  let completedRows: Cell[][] = [];
 
   const typeMenuOpenHandler = () => {
     isTypesMenuShown = true;
@@ -112,6 +121,7 @@
     selectedPuzzle = puzzleOfTheDay.clearGrid;
     numbers = getPuzzleReady(selectedPuzzle);
     rows = rowsHandler(numbers);
+    completedRows = rowsHandler(getPuzzleReady(puzzleOfTheDay.puzzleGrid));
   };
 
   const rowsHandler = (numbers: number[][]) => {
@@ -127,6 +137,7 @@
     });
   };
   rows = rowsHandler(numbers);
+  completedRows = rowsHandler(getPuzzleReady(puzzleOfTheDay.puzzleGrid));
 
   $: onChangeDifficulty(), difficulty;
 
@@ -466,6 +477,8 @@
   {redoActions}
   {redo}
   {languageHandler}
+  {isCheckerOn}
+  {checkerHandler}
 />
 {#if innerHeight > 650}
   <div
@@ -494,8 +507,10 @@
   on:click_outside={() => handleClick(-1, -1)}
 >
   <Board
+  {isCheckerOn}
     {lang}
     {rows}
+    {completedRows}
     {handleClick}
     {selectedCell}
     {selectedBox}
