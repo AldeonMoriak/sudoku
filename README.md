@@ -14,5 +14,6 @@ I wanted to test out svelte and had an idea of creating a Sudoku app with featur
 - [x] Timer and toggling it on/off
 - [x] Redo and Undo actions
 - [x] Mistake checker
+- [x] Remaining numbers indicators
 - [ ] Selecting previous days' puzzles 
 - [ ] Hints (wanna figure out how to implement advanced hints)

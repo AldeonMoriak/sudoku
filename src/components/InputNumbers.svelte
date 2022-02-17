@@ -2,6 +2,7 @@
   import type { Cell } from "src/types/Cell";
 
   import type { Lang } from "src/types/Lang";
+import type { NumberCount } from "src/types/NumberCount";
 
   export let isNoteEnabled: boolean;
   export let noteToggleHandler: () => void;
@@ -11,6 +12,7 @@
   export let rows: Cell[][];
   export let fillCellHandler: (num: number) => void;
   export let deleteHandler: () => void;
+  export let completedNumbers: NumberCount;
 </script>
 
 <div dir="rtl" class="max-w-[400px] min-w-[350px] w-full mx-auto grid grid-cols-9 text-center mt-2">
@@ -67,16 +69,17 @@
             : "bg-gray-200  text-gray-800 border-gray-800"
           : selectedCell[0] !== -1 &&
             rows[selectedCell[0]][selectedCell[1]].value === num
-          ? "bg-gray-100 text-gray-800 border-gray-800"
+          ? "bg-gray-300 text-gray-800 border-gray-800"
           : "bg-gray-800 text-white  border-white"
       } ${
         selectedCell[0] !== -1 && rows[selectedCell[0]][selectedCell[1]].isFixed
           ? "opacity-50 cursor-not-allowed"
           : ""
-      }`}
+      } ${completedNumbers[num] === 9 ? 'opacity-0' : ''}`}
       on:click={() => fillCellHandler(num)}
     >
       {num}
+      <span class="absolute text-xs font-light -translate-y-2 ">{9 - completedNumbers[num]}</span>
     </div>
   {/each}
 </div>

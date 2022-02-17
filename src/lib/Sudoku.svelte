@@ -12,6 +12,7 @@
   import { getPuzzleOfTheDay } from "../helpers/puzzles";
   import { clickOutside } from "../helpers/clickOutside";
   import Modal from "../components/Modal.svelte";
+  import type { NumberCount } from "src/types/NumberCount";
 
   let lang: Lang = "en";
   let selectedCell: [number, number] = [-1, -1];
@@ -21,8 +22,7 @@
   };
   let message = [];
   let isCheckerOn = true;
-          
-;
+
   let isModalShown = false;
   let isNoteEnabled = false;
   let isTimerShown = true;
@@ -43,10 +43,10 @@
     const seconds = Date.now() - startDate;
     leftTime = toStringTime(seconds);
   };
-  
+
   const checkerHandler = () => {
     isCheckerOn = !isCheckerOn;
-  }
+  };
 
   let timer = setInterval(timerHandler, 500);
 
@@ -122,6 +122,7 @@
     numbers = getPuzzleReady(selectedPuzzle);
     rows = rowsHandler(numbers);
     completedRows = rowsHandler(getPuzzleReady(puzzleOfTheDay.puzzleGrid));
+    completedNumberChecker();
   };
 
   const rowsHandler = (numbers: number[][]) => {
@@ -196,7 +197,42 @@
     return ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(name);
   }
 
+  let completedNumbers: NumberCount = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 0,
+    9: 0,
+  };
+
+  const completedNumberChecker = () => {
+    const numbers = rows
+      .map((row) =>
+        row.filter((cell) => !!cell.value).map(({ value }) => value)
+      )
+      .flat();
+    completedNumbers = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+      6: 0,
+      7: 0,
+      8: 0,
+      9: 0,
+    };
+    numbers.forEach((num) => completedNumbers[num]++);
+    console.log(completedNumbers);
+  };
   const fillCellHandler = (num: number) => {
+    if(completedNumbers[num] === 9) {
+      return;
+    }
     if (selectedCell[0] !== -1) {
       const cell = rows[selectedCell[0]][selectedCell[1]];
       if (cell.isFixed) {
@@ -263,6 +299,8 @@
       redoActions = [];
       checkIsGameDone();
     }
+
+    completedNumberChecker();
   };
 
   const checkIsGameDone = () => {
@@ -274,7 +312,10 @@
     if (isGameDone) {
       message =
         lang === "fa"
-          ? ["ایول بازی تموم شد!",leftTime.join(":") + " طول کشید تا بازی تموم بشه."]
+          ? [
+              "ایول بازی تموم شد!",
+              leftTime.join(":") + " طول کشید تا بازی تموم بشه.",
+            ]
           : ["Well done!", leftTime.join(":") + " took to finish the game."];
       isModalShown = true;
       clearInterval(timer);
@@ -342,6 +383,7 @@
     rows[selectedCell[0]][selectedCell[1]].value = 0;
     rows[selectedCell[0]][selectedCell[1]].notes = [];
     redoActions = [];
+    completedNumberChecker();
   };
 
   const actionHandler = (action: Action) => {
@@ -507,7 +549,7 @@
   on:click_outside={() => handleClick(-1, -1)}
 >
   <Board
-  {isCheckerOn}
+    {isCheckerOn}
     {lang}
     {rows}
     {completedRows}
@@ -518,6 +560,7 @@
   />
 
   <InputNumbers
+    {completedNumbers}
     {deleteHandler}
     {isNoteEnabled}
     {noteToggleHandler}
