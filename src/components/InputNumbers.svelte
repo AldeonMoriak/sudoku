@@ -55,13 +55,13 @@ import type { NumberCount } from "src/types/NumberCount";
 </div>
 
 <div
-  class={`max-w-[400px] min-w-[350px] w-full mx-auto grid grid-cols-9 text-center mt-2  ${
+  class={`max-w-[400px] min-w-[350px] w-full mx-auto grid grid-cols-9 text-center mt-2 select-none ${
     lang === "fa" ? "font-vazir sample_farsi_digits" : "font-poppins"
   }`}
 >
   {#each numKeys as num, numIndex ("num" + numIndex)}
     <div
-      class={` border-2 rounded-lg py-2 px-1 text-2xl font-bold cursor-pointer select-none ${
+      class={` border-2 rounded-lg py-2 px-1 text-2xl font-bold select-none ${
         isNoteEnabled
           ? selectedCell[0] !== -1 &&
             rows[selectedCell[0]][selectedCell[1]]?.notes.includes(num)
@@ -75,7 +75,7 @@ import type { NumberCount } from "src/types/NumberCount";
         selectedCell[0] !== -1 && rows[selectedCell[0]][selectedCell[1]].isFixed
           ? "opacity-50 cursor-not-allowed"
           : ""
-      } ${completedNumbers[num] === 9 ? 'opacity-0' : ''}`}
+      } ${completedNumbers[num] === 9 ? 'opacity-0 cursor-default' : 'cursor-pointer'}`}
       on:click={() => fillCellHandler(num)}
     >
       {num}
