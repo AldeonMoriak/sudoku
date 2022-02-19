@@ -1,6 +1,6 @@
   export type Action = {
     value: number | number[];
-    isNote: boolean;
-    command?: "add" | "remove";
+    isNote?: boolean;
     position: [number, number];
+    removedNotes?: Action[];
   };

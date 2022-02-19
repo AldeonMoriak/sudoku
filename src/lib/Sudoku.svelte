@@ -227,12 +227,59 @@
       9: 0,
     };
     numbers.forEach((num) => completedNumbers[num]++);
-    console.log(completedNumbers);
   };
+
+  const relatedCellsNotesChecker = (num: number) => {
+    const [row, col] = selectedCell;
+    let cells: string[] = [];
+    for (let i = 0; i < 9; i++) {
+      const cell1 = rows[row][i];
+      const cell2 = rows[i][col];
+      if (cell2.notes.length) {
+        if (cell2.notes.includes(num)) {
+          if (!cells.includes(`${i}${col}`)) {
+            cells.push(`${i}${col}`);
+          }
+        }
+      }
+      if (cell1.notes.length) {
+        if (cell1.notes.includes(num)) {
+          if (!cells.includes(`${row}${i}`)) {
+            cells.push(`${row}${i}`);
+          }
+        }
+      }
+    }
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const cell = rows[selectedBox.rows[i]][selectedBox.columns[j]];
+        const [boxRow, boxCol] = [selectedBox.rows[i], selectedBox.columns[j]];
+        if (cell.notes.length) {
+          if (cell.notes.includes(num)) {
+            if (!cells.includes(`${boxRow}${boxCol}`)) {
+              cells.push(`${boxRow}${boxCol}`);
+            }
+          }
+        }
+      }
+    }
+    return cells
+      .filter((el) => {
+        if (el !== selectedCell.join("")) {
+          return el;
+        }
+      })
+      .map((el) => {
+        const position: [number, number] = [parseInt(el[0]), parseInt(el[1])];
+        return position;
+      });
+  };
+
   const fillCellHandler = (num: number) => {
-    if(completedNumbers[num] === 9) {
+    if (completedNumbers[num] === 9) {
       return;
     }
+
     if (selectedCell[0] !== -1) {
       const cell = rows[selectedCell[0]][selectedCell[1]];
       if (cell.isFixed) {
@@ -274,6 +321,20 @@
         }
         rows[selectedCell[0]][selectedCell[1]].value = 0;
       } else {
+        const notePositions = relatedCellsNotesChecker(num);
+        let removedNotes: Action[] = [];
+        if (notePositions.length) {
+          notePositions.forEach((pos) => {
+            rows[pos[0]][pos[1]].notes = [
+              ...rows[pos[0]][pos[1]].notes.filter((note) => note !== num),
+            ];
+            const removedNote: Action = {
+              position: [...pos],
+              value: num,
+            };
+            removedNotes.push(removedNote);
+          });
+        }
         if (cell.notes.length) {
           actions = [
             ...actions,
@@ -281,6 +342,7 @@
               isNote: true,
               position: [...selectedCell],
               value: [...cell.notes],
+              removedNotes: [...removedNotes],
             },
           ];
         } else {
@@ -290,6 +352,7 @@
               isNote: false,
               position: [...selectedCell],
               value: cell.value,
+              removedNotes: [...removedNotes],
             },
           ];
         }
@@ -398,6 +461,7 @@
         action.value as number;
     }
     selectedCell = [...action.position];
+    completedNumberChecker();
   };
 
   const redo = () => {
