@@ -391,11 +391,11 @@
   };
 
   const keyboardHandler = (e: KeyboardEvent) => {
-    e.preventDefault();
     const name = e.key;
     if (selectedCell[0] !== -1) {
       if (isOfTypeMove(name)) {
         moveHandler(name);
+        e.preventDefault();
         return;
       }
       const isFixed = rows[selectedCell[0]][selectedCell[1]].isFixed;
