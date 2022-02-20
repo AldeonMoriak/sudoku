@@ -460,6 +460,21 @@
       rows[action.position[0]][action.position[1]].value =
         action.value as number;
     }
+    if (action?.removedNotes?.length) {
+      action.removedNotes.forEach((note) => {
+        if (action.operation === "undo") {
+          rows[note.position[0]][note.position[1]].notes.push(
+            note.value as number
+          );
+        } else {
+          rows[note.position[0]][note.position[1]].notes = [
+            ...rows[note.position[0]][note.position[1]].notes.filter(
+              (nt) => nt !== note.value
+            ),
+          ];
+        }
+      });
+    }
     selectedCell = [...action.position];
     completedNumberChecker();
   };
@@ -473,14 +488,35 @@
     if (cell.notes.length) {
       actions = [
         ...actions,
-        { value: cell.notes, position: [...action.position], isNote: true },
+        {
+          value: cell.notes,
+          position: [...action.position],
+          isNote: true,
+          removedNotes: action?.removedNotes ?? null,
+        },
       ];
     } else {
       actions = [
         ...actions,
-        { value: cell.value, position: [...action.position], isNote: false },
+        {
+          value: cell.value,
+          position: [...action.position],
+          isNote: false,
+          removedNotes: action?.removedNotes ?? null,
+        },
       ];
     }
+
+    if (action?.removedNotes?.length) {
+      action.removedNotes.forEach((note) => {
+        rows[note.position[0]][note.position[1]].notes = [
+          ...rows[note.position[0]][note.position[1]].notes.filter(
+            (nt) => nt !== note.value
+          ),
+        ];
+      });
+    }
+    action.operation = "redo";
     actionHandler(action);
     redoActions = redoActions;
   };
@@ -494,14 +530,25 @@
     if (cell.notes.length) {
       redoActions = [
         ...redoActions,
-        { value: cell.notes, position: [...action.position], isNote: true },
+        {
+          value: cell.notes,
+          position: [...action.position],
+          isNote: true,
+          removedNotes: action?.removedNotes ?? null,
+        },
       ];
     } else {
       redoActions = [
         ...redoActions,
-        { value: cell.value, position: [...action.position], isNote: false },
+        {
+          value: cell.value,
+          position: [...action.position],
+          isNote: false,
+          removedNotes: action?.removedNotes ?? null,
+        },
       ];
     }
+    action.operation = "undo";
     actionHandler(action);
     actions = actions;
   };
