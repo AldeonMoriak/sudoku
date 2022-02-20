@@ -14,7 +14,7 @@ body {
     -webkit-text-stroke: 0.05em black;
   }
   .with-stroke-white {
-    -webkit-text-stroke: 0.02em white;
+    -webkit-text-stroke: 0.04em white;
   }
 
   .sample_farsi_digits {
