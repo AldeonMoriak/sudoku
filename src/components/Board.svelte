@@ -46,7 +46,7 @@
               ? !cell.notes.length
                 ? cell.isFixed
                   ? "with-stroke text-cyan-500 bg-gray-400/60"
-                  : "with-stroke text-cyan-500 bg-gray-900"
+                  : "with-stroke-white text-cyan-500 bg-gray-900"
                 : "bg-gray-900"
               : selectedCell[0] !== -1 &&
                 rows[selectedCell[0]][selectedCell[1]]?.value === cell.value &&

@@ -13,6 +13,9 @@ body {
   .with-stroke {
     -webkit-text-stroke: 0.05em black;
   }
+  .with-stroke-white {
+    -webkit-text-stroke: 0.02em white;
+  }
 
   .sample_farsi_digits {
     -moz-font-feature-settings: "ss01";
