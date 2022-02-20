@@ -44,7 +44,9 @@
           } ${
             selectedCell.join("") === [rowIndex, colIndex].join("")
               ? !cell.notes.length
-                ? "with-stroke text-cyan-500 bg-gray-900"
+                ? cell.isFixed
+                  ? "with-stroke text-cyan-500 bg-gray-400/60"
+                  : "with-stroke text-cyan-500 bg-gray-900"
                 : "bg-gray-900"
               : selectedCell[0] !== -1 &&
                 rows[selectedCell[0]][selectedCell[1]]?.value === cell.value &&
@@ -58,7 +60,7 @@
               (selectedBox.rows.includes(rowIndex) &&
                 selectedBox.columns.includes(colIndex)))
               ? cell.isFixed
-                ? "bg-blue-200"
+                ? "bg-gray-400/60"
                 : selectedCell[0] !== -1 &&
                   cell.notes.includes(
                     rows[selectedCell[0]][selectedCell[1]]?.value
