@@ -31,7 +31,7 @@
       {#each row as cell, colIndex ("column" + colIndex)}
         <div
           on:click={() => handleClick(rowIndex, colIndex)}
-          class={`w-full p-1 h-full text-black font-bold text-3xl ${
+          class={`w-full p-1 min-h-[44px] h-full text-black font-bold text-3xl ${
             colIndex === 2 || colIndex === 5
               ? "border-r-4 border-r-black"
               : colIndex !== 8
