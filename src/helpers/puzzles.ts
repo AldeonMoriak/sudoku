@@ -7,7 +7,7 @@ export function getPuzzleOfTheDay(puzzleType: PuzzleType) {
   const start = new Date(2022, 1, 13);
   const diff = Number(now) - Number(start);
   let day = Math.floor(diff / (1000 * 60 * 60 * 24));
-  while (day > puzzles[puzzleType].length) {
+  while (day >= puzzles[puzzleType].length) {
     day -= puzzles[puzzleType].length;
   }
   return puzzles[puzzleType][day];
